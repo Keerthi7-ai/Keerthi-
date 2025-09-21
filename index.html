@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crop Suggestion App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f9f5;
+      text-align: center;
+      padding: 40px;
+    }
+    h1 {
+      color: #2e7d32;
+    }
+    input {
+      padding: 10px;
+      width: 200px;
+      border: 2px solid #2e7d32;
+      border-radius: 8px;
+      margin: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #1b5e20;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 10px;
+      display: inline-block;
+      text-align: left;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌾 Crop Suggestion Based on Weather & Acres</h1>
+  <input type="text" id="cityInput" placeholder="Enter city name" />
+  <input type="number" id="acreInput" placeholder="Enter acres" min="1" />
+  <br>
+  <button onclick="suggestCrop()">Suggest Crop</button>
+  <div id="result"></div>
+
+  <script>
+    const apiKey = "57f4960051d42aaea9a8d42feaf2bcf8"; // your API key
+
+    function suggestCrop() {
+      const city = document.getElementById("cityInput").value.trim();
+      const acres = parseFloat(document.getElementById("acreInput").value);
+
+      if (!city) {
+        alert("Please enter a city name.");
+        return;
+      }
+      if (isNaN(acres) || acres <= 0) {
+        alert("Please enter a valid number of acres.");
+        return;
+      }
+
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error("City not found");
+          return response.json();
+        })
+        .then(data => {
+          const temp = data.main.temp;
+          const humidity = data.main.humidity;
+          const weather = data.weather[0].main;
+
+          let crop = "";
+
+          // Crop logic based on weather
+          if (temp >= 20 && temp <= 30 && humidity >= 50 && humidity <= 70) {
+            crop = "Rice";
+          } else if (temp >= 18 && temp <= 27 && humidity >= 60) {
+            crop = "Sugarcane";
+          } else if (temp >= 25 && temp <= 35 && humidity < 50) {
+            crop = "Wheat";
+          } else if (temp >= 21 && temp <= 30) {
+            crop = "Maize";
+          } else {
+            crop = "No ideal crop found for this weather";
+          }
+
+          // Adjust suggestion based on acres
+          if (acres >= 10 && crop !== "No ideal crop found for this weather") {
+            crop += " (suitable for large acreage)";
+          } else if (acres < 10 && crop !== "No ideal crop found for this weather") {
+            crop += " (suitable for small acreage)";
+          }
+
+          document.getElementById("result").innerHTML = `
+            <h2>Weather in ${data.name}</h2>
+            <p><strong>Condition:</strong> ${weather}</p>
+            <p><strong>Temperature:</strong> ${temp} °C</p>
+            <p><strong>Humidity:</strong> ${humidity}%</p>
+            <p><strong>Acres:</strong> ${acres}</p>
+            <h3>🌱 Suggested Crop: ${crop}</h3>
+          `;
+        })
+        .catch(error => {
+          console.error(error);
+          document.getElementById("result").innerText = "Could not retrieve data. Try again.";
+        });
+    }
+  </script>
+</body>
+</html>
+
